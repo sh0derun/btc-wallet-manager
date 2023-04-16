@@ -1,6 +1,8 @@
 package com.shaderun.api;
 
+import org.springframework.http.HttpStatus;
+
 public record Result(
-        String status,
+        HttpStatus status,
         String message
 ){}

@@ -4,28 +4,56 @@ import com.shaderun.api.HistoryRequestRange;
 import com.shaderun.api.Result;
 import com.shaderun.api.Transaction;
 import com.shaderun.api.WalletHistoryResult;
-import org.springframework.web.bind.annotation.GetMapping;
-import org.springframework.web.bind.annotation.PostMapping;
-import org.springframework.web.bind.annotation.RestController;
+import com.shaderun.exception.ApiWalletException;
+import com.shaderun.exception.InternalApiWalletException;
+import com.shaderun.service.BtcWalletTransactionsService;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.http.HttpStatus;
+import org.springframework.http.ResponseEntity;
+import org.springframework.web.bind.annotation.*;
 
-import java.util.ArrayList;
-import java.util.List;
+import java.util.function.Supplier;
 
 @RestController
+@RequestMapping("/v1/transaction")
 public class BtcWalletTransactionsController {
 
-    @PostMapping(value = "/save")
-    public Result saveTransaction(Transaction transaction){
-        return new Result("Created", "okay");
+    private BtcWalletTransactionsService transactionsService;
+
+    public BtcWalletTransactionsController(){}
+
+    @Autowired
+    public BtcWalletTransactionsController(BtcWalletTransactionsService transactionsService){
+        this.transactionsService = transactionsService;
     }
 
-    @GetMapping(value = "/")
-    public WalletHistoryResult getHistoryTransactions(HistoryRequestRange range){
-        List<Transaction> transactions = new ArrayList<>();
-        transactions.add(new Transaction("2019-10-05T14:45:05+07:00", 10.0));
-        transactions.add(new Transaction("2019-10-05T14:45:05+07:00", 20.0));
-        transactions.add(new Transaction("2019-10-05T14:45:05+07:00", 30.0));
-        return new WalletHistoryResult(transactions);
+    @PostMapping(value = "/save")
+    public ResponseEntity<Result> saveTransact(@RequestBody Transaction transaction) {
+        return new ResponseEntity<>(
+                BtcWalletTransactionsController.callFunction(()->transactionsService.saveTransaction(transaction)),
+                HttpStatus.CREATED
+        );
     }
+
+    @GetMapping(value = "/history")
+    public ResponseEntity<WalletHistoryResult> getHistoryTransactions(@RequestBody HistoryRequestRange range){
+        return new ResponseEntity<>(
+                BtcWalletTransactionsController.callFunction(() -> transactionsService.getWalletHistory(range)),
+                HttpStatus.OK
+        );
+    }
+
+    public static <T> T callFunction(Supplier<T> functionToCall){
+        T res;
+        try {
+            res = functionToCall.get();
+        } catch (ApiWalletException e) {
+            throw e;
+        } catch (Exception ex) {
+            throw new InternalApiWalletException(ex.getMessage(), ex.getCause());
+        }
+        return res;
+    }
+
 
 }
