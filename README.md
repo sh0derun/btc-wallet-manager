@@ -1,5 +1,7 @@
 # BTC Wallet Manager
 
+![status](https://github.com/sh0derun/btc-wallet-manager/actions/workflows/maven.yml/badge.svg)
+
 BTC Wallet Manager is a Java-based project that allows you to manage Bitcoin wallets. This README file provides information on how to set up and run the project.
 
 ## Prerequisites
